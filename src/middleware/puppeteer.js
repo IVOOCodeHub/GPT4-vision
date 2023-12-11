@@ -1,26 +1,57 @@
 const puppeteer = require('puppeteer')
 
+const AbsoluteScreenshotFolderUrl =
+  'http://srv-web:8080/usv_mig_v1/GPT4-vision/public/screenshots'
+const screenshotFolderUrl = './public/screenshots/screenshot.png'
+
 function takeScreenshotMiddleware() {
   return async (req, res, next) => {
-    console.log('PUPPETEER : Starting browser...')
-    const requestBody = req.body
-    const browser = await puppeteer.launch({ headless: true })
-    const page = await browser.newPage()
+    let browser // declare browser variable to be used and closed in the block finally.
 
-    console.log('PUPPETEER : Navigating to the page...')
-    await page.goto(requestBody.url)
+    try {
+      console.log('PUPPETEER: Starting browser...')
+      const requestBody = req.body
+      browser = await puppeteer.launch({ headless: 'new' })
+      const page = await browser.newPage()
 
-    console.log('PUPPETEER : take a screenshot...')
-    await page.setViewport({ width: 1920, height: 1080 })
-    await page.screenshot({
-      path: './public/screenshots/screenshot.png',
-      fullPage: true,
-    })
-    await browser.close()
+      console.log('PUPPETEER: Connecting to USV...')
+      await connectPuppeteerToUSV(page)
 
-    console.log('PUPPETEER : Done')
-    next()
+      console.log('PUPPETEER: Navigating to the page...')
+      await page.goto(requestBody.url)
+
+      console.log('PUPPETEER: Take a screenshot...')
+      await page.setViewport({ width: 1920, height: 1080 })
+      await page.screenshot({
+        path: screenshotFolderUrl,
+        fullPage: true,
+      })
+
+      console.log('PUPPETEER: Done')
+      res.status(201).json({
+        message:
+          'Puppeteer: Screenshot taken and saved in ' +
+          AbsoluteScreenshotFolderUrl,
+      })
+    } catch (error) {
+      console.error('Puppeteer error: ', error)
+      res.status(500).json({ error: 'Puppeteer error: ' + error })
+    } finally {
+      if (browser) {
+        await browser.close()
+      }
+      next()
+    }
   }
+}
+
+async function connectPuppeteerToUSV(page) {
+  await page.goto('http://srv-web:8080/usv_prod/menu0.asp')
+  await page.type('input[name=identifiant]', `${process.env.USV_USERNAME}`)
+  await page.type('input[name=mdp]', `${process.env.USV_PASSWORD}`)
+  await page.keyboard.press('Enter')
+  await page.waitForNavigation()
+  console.log('PUPPETEER: Successfully connected to USV')
 }
 
 module.exports = { takeScreenshotMiddleware }

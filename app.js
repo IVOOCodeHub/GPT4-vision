@@ -1,4 +1,5 @@
 // imports
+require('dotenv').config();
 const express = require('express')
 const morgan = require('morgan')
 const routePuppeteer = require('./src/routes/puppeteer.js')
