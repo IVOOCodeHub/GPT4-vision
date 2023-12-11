@@ -1,0 +1,17 @@
+{
+  "name": "gpt4-vision",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Nicolas DECRESSAC <decressac.nicolas@icloud.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.2",
+    "openai": "^4.20.1",
+    "puppeteer": "^21.6.0"
+  }
+}
